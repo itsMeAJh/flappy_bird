@@ -1,8 +1,16 @@
+<<<<<<< HEAD
 import random
 import pygame
 import sys
 from pygame.locals import *
 
+=======
+import pygame
+import random
+import sys
+
+from pygame.locals import *
+>>>>>>> c8a891f (Initial commit)
 from const import *
 from game import Game, Bird, Pipe
 
@@ -47,6 +55,7 @@ class Main:
         self.bird_group.draw(screen)
         self.bird_group.update()
         self.pipe_group.draw(screen)
+<<<<<<< HEAD
         self.pipe_group.update()
         screen.blit(BASE, (0, SCREEN_HEIGHT - BASE.get_height()))
         if not self.flappy.game.game_over_ and self.flappy.flying_:
@@ -56,11 +65,29 @@ class Main:
             if current_time - self.last_pipe > self.pipe_frequency:
                 top_pipe = Pipe(SCREEN_WIDTH, int(SCREEN_HEIGHT / 2) + pipe_height, 1)
                 bottom_pipe = Pipe(SCREEN_WIDTH, int(SCREEN_HEIGHT / 2) + pipe_height, -1)
+=======
+        self.pipe_group.update(self.flappy.flying_)
+
+        screen.blit(BASE, (0, SCREEN_HEIGHT - BASE.get_height()))
+
+        if not self.flappy.game.game_over_ and self.flappy.flying_:
+            _game.base(screen)
+            current_time = pygame.time.get_ticks()
+            pipe_height = random.randrange(int(offset), int(free_height - offset))
+
+            if current_time - self.last_pipe > self.pipe_frequency:
+                top_pipe = Pipe(SCREEN_WIDTH, pipe_height, 1)
+                bottom_pipe = Pipe(SCREEN_WIDTH, pipe_height, -1)
+>>>>>>> c8a891f (Initial commit)
                 # noinspection PyTypeChecker
                 self.pipe_group.add(top_pipe)
                 # noinspection PyTypeChecker
                 self.pipe_group.add(bottom_pipe)
                 self.last_pipe = current_time
+<<<<<<< HEAD
+=======
+
+>>>>>>> c8a891f (Initial commit)
         self.flappy.hit()
         self.clock.tick(FPS)
         pygame.display.update()

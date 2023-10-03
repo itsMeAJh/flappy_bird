@@ -1,9 +1,17 @@
+<<<<<<< HEAD
 from pygame import image
+=======
+from pygame import image, mixer
+>>>>>>> c8a891f (Initial commit)
 
 SCREEN_WIDTH = 287
 SCREEN_HEIGHT = 510
 FPS = 32
+<<<<<<< HEAD
 PIPE_GAP = 125
+=======
+PIPE_GAP = 115
+>>>>>>> c8a891f (Initial commit)
 
 WHITE_COLOR = (255, 255, 255)
 BLACK_COLOR = (0, 0, 0)
@@ -18,5 +26,10 @@ BIRD = image.load(IMAGE_PATH + "red_bird-1.png")
 BASE = image.load(IMAGE_PATH + "base.png")
 PIPE = image.load(IMAGE_PATH + "pipe.png")
 
+<<<<<<< HEAD
+=======
+
+
+>>>>>>> c8a891f (Initial commit)
 free_height = SCREEN_HEIGHT - BASE.get_height()
 offset = free_height * 0.4
