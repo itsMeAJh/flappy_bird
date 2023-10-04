@@ -20,4 +20,4 @@ PIPE = image.load(IMAGE_PATH + "pipe.png")
 
 
 free_height = SCREEN_HEIGHT - BASE.get_height()
-offset = free_height * 0.4
+offset = free_height * 0.3

@@ -1,6 +1,5 @@
 import math
 import pygame
-import os, sys
 
 from const import *
 
@@ -8,7 +7,7 @@ from const import *
 class Game(object):
     def __init__(self):
         self.base_vel = 0
-        self.game_over_ = False
+        self.game_over = False
 
     @staticmethod
     def show_bg(surface):
@@ -25,10 +24,6 @@ class Game(object):
         if abs(self.base_vel) > BASE.get_width():
             self.base_vel = 0
 
-    def game_over(self, game_over=False):
-        self.game_over_ = game_over
-        return self.game_over_
-
 
 class Bird(pygame.sprite.Sprite):
     def __init__(self, x, y):
@@ -39,7 +34,7 @@ class Bird(pygame.sprite.Sprite):
         self.vel = 0
         self.angle = 0
         self.flap = False
-        self.flying_ = False
+        self.flying = False
 
         for num in range(1, 4):
             img = pygame.image.load(IMAGE_PATH + f"red_bird-{num}.png")
@@ -49,18 +44,15 @@ class Bird(pygame.sprite.Sprite):
         self.rect.center = [x, y]
         self.game = Game()
 
-    def flying(self, fly=False):
-        self.flying_ = fly
-        return self.flying_
-
     def hit(self):
+        """Checks whether the bottom part of the bird hits the ground"""
         if self.rect.bottom > free_height:
-            self.game.game_over(True)
-            self.flying_ = False
+            self.game.game_over = True
+            self.flying = False
 
     def update(self):
         # gravity acting on bird
-        if self.flying_:
+        if self.flying:
             self.vel += 0.5
             if self.vel > 8:
                 self.vel = 8
@@ -73,7 +65,7 @@ class Bird(pygame.sprite.Sprite):
             if self.angle > 90:
                 self.angle = 90
 
-        if not self.game.game_over_:
+        if not self.game.game_over:
             # Bird flap(jump)
             if pygame.mouse.get_pressed()[0] == 1 and not self.flap:
                 self.flap = True
@@ -107,8 +99,8 @@ class Pipe(pygame.sprite.Sprite):
         if position == -1:  # for lower pipe
             self.rect.topleft = [x, y + int(halfPipeGap)]
 
-    def update(self, flying):
-        if flying:
+    def update(self, flying, game_over):
+        if flying and not game_over:
             self.rect.x -= scroll_speed
             if self.rect.right < 0:
                 self.kill()
