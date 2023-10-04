@@ -11,14 +11,14 @@ class Game(object):
 
     @staticmethod
     def show_bg(surface):
-        surface.blit(background_image, (0, 0))
+        surface.blit(background_image.convert_alpha(), (0, 0))
 
     def base(self, surface):
         base_rect = base_image.get_rect()
         tiles = ceil(SCREEN_WIDTH / base_image.get_width()) + 1
         for i in range(0, tiles):
             base_rect.bottomleft = (i * base_image.get_width() + self.base_vel, SCREEN_HEIGHT)
-            surface.blit(base_image, base_rect)
+            surface.blit(base_image.convert_alpha(), base_rect)
 
         self.base_vel -= scroll_speed
         if abs(self.base_vel) > base_image.get_width():
@@ -121,5 +121,67 @@ class Pipe(pygame.sprite.Sprite):
             if self.rect.right < 0:
                 self.kill()
 
-            if self.rect.left == int(initialBirdPosX + 2):
-                point_sound.play()
+
+class Score(pygame.sprite.Sprite):
+    def __init__(self, x, y):
+        super().__init__()
+        self.images = []
+        for i in range(10):
+            img = pygame.image.load(IMAGE_PATH + f"{i}.png")
+            self.images.append(img)
+        self.image_width = self.images[0].get_width()  # Assuming all digits have the same width
+        self.rects = []
+        self.image = self.images[0]  # Default image
+        self.rect = self.image.get_rect()  # Create a rect
+        self.update_position(x, y)
+
+    def update_position(self, x, y):
+        self.rects.clear()
+        self.rect.center = [x, y]
+
+    def update(self, score):
+        digits = [int(x) for x in list(str(score))]
+        total_width = len(digits) * self.image_width
+        x_pos = self.rect.x - (total_width - self.rect.width) // 2  # Adjust the x position
+
+        for digit in digits:
+            if 0 <= digit < len(self.images):
+                self.rects.append(pygame.Rect(x_pos, self.rect.y, self.image_width, self.rect.height))
+                x_pos += self.image_width
+            else:
+                print(f"Invalid digit: {digit}")
+
+        for i, rect in enumerate(self.rects):
+            if i < len(digits) and 0 <= digits[i] < len(self.images):
+                self.image = self.images[digits[i]]
+                self.rect = rect
+
+# class Score(pygame.sprite.Sprite):
+#     def __init__(self, x, y):
+#         pygame.sprite.Sprite.__init__(self)
+#         self.images = []
+#         for i in range(10):
+#             img = pygame.image.load(IMAGE_PATH + f"{i}.png")
+#             self.images.append(img)
+#         self.image_width = self.images[0].get_width()  # Assuming all digits have the same width
+#         self.rects = []
+#         self.image = self.images[0]  # Default image
+#         self.rect = self.image.get_rect()  # Create a rect
+#         self.update_position(x, y)
+#
+#     def update_position(self, x, y):
+#         self.rects.clear()
+#         self.rect.topleft = [x, y]
+#
+#     def update(self, score):
+#         digits = [int(x) for x in list(str(score))]
+#         total_width = len(digits) * self.image_width
+#
+#         for i, digit in enumerate(digits):
+#             x_pos = self.rect.x + (self.rect.width - total_width) // 2 + i * self.image_width
+#             self.rects.append(pygame.Rect(x_pos, self.rect.y, self.image_width, self.rect.height))
+#
+#         for i, _rect in enumerate(self.rects):
+#             self.image = self.images[digits[i]]
+#             self.rect = _rect
+#
