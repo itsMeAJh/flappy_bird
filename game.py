@@ -1,9 +1,7 @@
-import pygame
 import math
-<<<<<<< HEAD
-=======
+import pygame
+import os, sys
 
->>>>>>> c8a891f (Initial commit)
 from const import *
 
 
@@ -63,15 +61,9 @@ class Bird(pygame.sprite.Sprite):
     def update(self):
         # gravity acting on bird
         if self.flying_:
-<<<<<<< HEAD
             self.vel += 0.5
-            if self.vel > 12:
-                self.vel = 12
-=======
-            self.vel += 0.8
             if self.vel > 8:
                 self.vel = 8
->>>>>>> c8a891f (Initial commit)
 
             if self.rect.bottom < free_height:
                 self.rect.y += int(self.vel)
@@ -85,7 +77,7 @@ class Bird(pygame.sprite.Sprite):
             # Bird flap(jump)
             if pygame.mouse.get_pressed()[0] == 1 and not self.flap:
                 self.flap = True
-                self.vel = -10
+                self.vel = -8
                 self.angle = -45
 
             if pygame.mouse.get_pressed()[0] == 0:
@@ -115,13 +107,8 @@ class Pipe(pygame.sprite.Sprite):
         if position == -1:  # for lower pipe
             self.rect.topleft = [x, y + int(halfPipeGap)]
 
-<<<<<<< HEAD
-    def update(self):
-        self.rect.x -= scroll_speed
-=======
     def update(self, flying):
         if flying:
             self.rect.x -= scroll_speed
             if self.rect.right < 0:
                 self.kill()
->>>>>>> c8a891f (Initial commit)
