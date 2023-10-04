@@ -1,4 +1,9 @@
 from pygame import image, mixer
+from random import randint
+
+random_action = randint(0, 2)
+window_title = "Flappy Bird Game"
+bird_width, bird_height = 34, 24
 
 SCREEN_WIDTH = 287
 SCREEN_HEIGHT = 510
@@ -13,11 +18,18 @@ halfPipeGap = PIPE_GAP / 2
 scroll_speed = 5
 
 IMAGE_PATH = "assets/image/"
-BACKGROUND = image.load(IMAGE_PATH + "background-1.png")
-BIRD = image.load(IMAGE_PATH + "red_bird-1.png")
-BASE = image.load(IMAGE_PATH + "base.png")
-PIPE = image.load(IMAGE_PATH + "pipe.png")
+background_image = image.load(IMAGE_PATH + f"background-{randint(1, 2)}.png")
+bird_image = image.load(IMAGE_PATH + "red_bird-1.png")
+base_image = image.load(IMAGE_PATH + "base.png")
+pipe_image = image.load(IMAGE_PATH + "pipe.png")
 
+mixer.init()
+SOUND_PATH = "assets/audio/"
+die_sound = mixer.Sound(SOUND_PATH + "die.mp3")
+flap_sound = mixer.Sound(SOUND_PATH + "flap.mp3")
+hit_sound = mixer.Sound(SOUND_PATH + "hit.mp3")
+point_sound = mixer.Sound(SOUND_PATH + "point.mp3")
+swosh_sound = mixer.Sound(SOUND_PATH + "swosh.mp3")
 
-free_height = SCREEN_HEIGHT - BASE.get_height()
-offset = free_height * 0.3
+height_to_bottom = SCREEN_HEIGHT - base_image.get_height()
+offset = height_to_bottom * 0.3
