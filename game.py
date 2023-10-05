@@ -9,19 +9,24 @@ class Game(object):
         self.base_vel = 0
         self.game_over = False
 
+        self.images = []
+        for i in range(10):
+            img = pygame.image.load(IMAGE_PATH + f"{i}.png")
+            self.images.append(img)
+
     @staticmethod
     def show_bg(surface):
-        surface.blit(background_image.convert_alpha(), (0, 0))
+        surface.blit(BACKGROUND_IMAGE.convert_alpha(), (0, 0))
 
     def base(self, surface):
-        base_rect = base_image.get_rect()
-        tiles = ceil(SCREEN_WIDTH / base_image.get_width()) + 1
+        base_rect = BASE_IMAGE.get_rect()
+        tiles = ceil(SCREEN_WIDTH / BASE_IMAGE.get_width()) + 1
         for i in range(0, tiles):
-            base_rect.bottomleft = (i * base_image.get_width() + self.base_vel, SCREEN_HEIGHT)
-            surface.blit(base_image.convert_alpha(), base_rect)
+            base_rect.bottomleft = (i * BASE_IMAGE.get_width() + self.base_vel, SCREEN_HEIGHT)
+            surface.blit(BASE_IMAGE.convert_alpha(), base_rect)
 
-        self.base_vel -= scroll_speed
-        if abs(self.base_vel) > base_image.get_width():
+        self.base_vel -= SCROLL_SPEED
+        if abs(self.base_vel) > BASE_IMAGE.get_width():
             self.base_vel = 0
 
 
@@ -36,7 +41,8 @@ class Bird(pygame.sprite.Sprite):
         self.flap = False
         self.flying = False
         self.bird = sprite_sheet.SpriteSheet(IMAGE_PATH + "bird_sprite-sheet.png")
-        self.action = random_action
+        self.action = RANDOM_ACTION
+        self.any_collision_occurred = False  # Add a hit occurred flag
         step_counter = 0
         animation_steps = [3, 3, 3]
 
@@ -45,7 +51,7 @@ class Bird(pygame.sprite.Sprite):
             for _ in range(step):
                 # img = pygame.image.load(IMAGE_PATH + f"red_bird-{num}.png")
                 # self.images.append(img)
-                temp_list.append(self.bird.image_at((bird_width * step_counter, 0, bird_width, bird_height), -1))
+                temp_list.append(self.bird.image_at((BIRD_WIDTH * step_counter, 0, BIRD_WIDTH, BIRD_HEIGHT), -1))
                 step_counter += 1
             self.images.append(temp_list)
 
@@ -56,9 +62,12 @@ class Bird(pygame.sprite.Sprite):
 
     def hit(self):
         """Checks whether the bottom part of the bird hits the ground"""
-        if self.rect.bottom > height_to_bottom:
+        if self.rect.bottom > HEIGHT_TO_BOTTOM:
             self.game.game_over = True
             self.flying = False
+            if not self.any_collision_occurred:
+                HIT_SOUND.play()  # Play the hit sound
+                self.any_collision_occurred = True  # Set the hit occurred flag
 
     def update(self):
         # gravity acting on bird
@@ -67,7 +76,7 @@ class Bird(pygame.sprite.Sprite):
             if self.vel > 8:
                 self.vel = 8
 
-            if self.rect.bottom < height_to_bottom:
+            if self.rect.bottom < HEIGHT_TO_BOTTOM:
                 self.rect.y += int(self.vel)
 
             # rotate the bird
@@ -81,7 +90,7 @@ class Bird(pygame.sprite.Sprite):
                 self.flap = True
                 self.vel = -8
                 self.angle = -45
-                flap_sound.play()
+                FLAP_SOUND.play()
 
             if pygame.mouse.get_pressed()[0] == 0:
                 self.flap = False
@@ -102,86 +111,21 @@ class Bird(pygame.sprite.Sprite):
 class Pipe(pygame.sprite.Sprite):
     def __init__(self, x, y, position):
         pygame.sprite.Sprite.__init__(self)
-        self.image = pipe_image
+        self.image = PIPE_IMAGE
         self.rect = self.image.get_rect()
         self.no_sound = True
 
         if position is 1:  # for upper pipe
             self.image = pygame.transform.flip(self.image, False, True)
-            self.rect.bottomleft = [x, y - int(halfPipeGap)]
+            self.rect.bottomleft = [x, y - int(HALF_PIPE_GAP)]
             self.no_sound = False
 
         if position is -1:  # for lower pipe
-            self.rect.topleft = [x, y + int(halfPipeGap)]
+            self.rect.topleft = [x, y + int(HALF_PIPE_GAP)]
 
     def update(self, flying, game_over):
         if flying and not game_over:
-            self.rect.x -= scroll_speed
+            self.rect.x -= SCROLL_SPEED
 
             if self.rect.right < 0:
                 self.kill()
-
-
-class Score(pygame.sprite.Sprite):
-    def __init__(self, x, y):
-        super().__init__()
-        self.images = []
-        for i in range(10):
-            img = pygame.image.load(IMAGE_PATH + f"{i}.png")
-            self.images.append(img)
-        self.image_width = self.images[0].get_width()  # Assuming all digits have the same width
-        self.rects = []
-        self.image = self.images[0]  # Default image
-        self.rect = self.image.get_rect()  # Create a rect
-        self.update_position(x, y)
-
-    def update_position(self, x, y):
-        self.rects.clear()
-        self.rect.center = [x, y]
-
-    def update(self, score):
-        digits = [int(x) for x in list(str(score))]
-        total_width = len(digits) * self.image_width
-        x_pos = self.rect.x - (total_width - self.rect.width) // 2  # Adjust the x position
-
-        for digit in digits:
-            if 0 <= digit < len(self.images):
-                self.rects.append(pygame.Rect(x_pos, self.rect.y, self.image_width, self.rect.height))
-                x_pos += self.image_width
-            else:
-                print(f"Invalid digit: {digit}")
-
-        for i, rect in enumerate(self.rects):
-            if i < len(digits) and 0 <= digits[i] < len(self.images):
-                self.image = self.images[digits[i]]
-                self.rect = rect
-
-# class Score(pygame.sprite.Sprite):
-#     def __init__(self, x, y):
-#         pygame.sprite.Sprite.__init__(self)
-#         self.images = []
-#         for i in range(10):
-#             img = pygame.image.load(IMAGE_PATH + f"{i}.png")
-#             self.images.append(img)
-#         self.image_width = self.images[0].get_width()  # Assuming all digits have the same width
-#         self.rects = []
-#         self.image = self.images[0]  # Default image
-#         self.rect = self.image.get_rect()  # Create a rect
-#         self.update_position(x, y)
-#
-#     def update_position(self, x, y):
-#         self.rects.clear()
-#         self.rect.topleft = [x, y]
-#
-#     def update(self, score):
-#         digits = [int(x) for x in list(str(score))]
-#         total_width = len(digits) * self.image_width
-#
-#         for i, digit in enumerate(digits):
-#             x_pos = self.rect.x + (self.rect.width - total_width) // 2 + i * self.image_width
-#             self.rects.append(pygame.Rect(x_pos, self.rect.y, self.image_width, self.rect.height))
-#
-#         for i, _rect in enumerate(self.rects):
-#             self.image = self.images[digits[i]]
-#             self.rect = _rect
-#
