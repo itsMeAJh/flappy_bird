@@ -1,7 +1,7 @@
 from pygame import image, mixer
 from random import randint
 
-# Constants for game window
+# Screen Constants
 SCREEN_WIDTH = 287
 SCREEN_HEIGHT = 510
 FPS = 32
@@ -21,12 +21,22 @@ SCROLL_SPEED = 5
 WHITE_COLOR = (255, 255, 255)
 BLACK_COLOR = (0, 0, 0)
 
-# Image paths
 IMAGE_PATH = "assets/image/"
+
+# Image paths
 BACKGROUND_IMAGE = image.load(IMAGE_PATH + f"background-{randint(1, 2)}.png")
-BIRD_IMAGE = image.load(IMAGE_PATH + "red_bird-1.png")
 BASE_IMAGE = image.load(IMAGE_PATH + "base.png")
-PIPE_IMAGE = image.load(IMAGE_PATH + "pipe.png")
+PIPE_IMAGE = image.load(IMAGE_PATH + f"pipe-{randint(1, 2)}.png")
+SCORE_BOARD_IMAGE = image.load(IMAGE_PATH + "score_board.png")
+START_BUTTON_IMAGE = image.load(IMAGE_PATH + "start_button.png")
+GAME_OVER_IMAGE = image.load(IMAGE_PATH + "game_over.png")
+GET_READY_IMAGE = image.load(IMAGE_PATH + "get_ready.png")
+OK_BUTTON_IMAGE = image.load(IMAGE_PATH + "ok_button.png")
+PAUSE_BUTTON_IMAGE = image.load(IMAGE_PATH + "pause_button.png")
+PLAY_BUTTON_IMAGE = image.load(IMAGE_PATH + "play_button.png")
+FLAPPY_BIRD_IMAGE = image.load(IMAGE_PATH + "flappy_bird.png")
+START_GAME_IMAGE = image.load(IMAGE_PATH + "tap_tap.png")
+
 
 # Initialize mixer for sounds
 mixer.init()

@@ -7,18 +7,34 @@ import pygame
 class Game(object):
     def __init__(self):
         self.base_vel = 0
+        self.background_scroll = 0
         self.game_over = False
 
-        self.images = []
+        self.number_images = []
+        self.score_numbers_images = []
         for i in range(10):
             img = pygame.image.load(IMAGE_PATH + f"{i}.png")
-            self.images.append(img)
+            img1 = pygame.image.load(IMAGE_PATH + f"{i}s.png")
+            self.number_images.append(img)
+            self.score_numbers_images.append(img1)
 
-    @staticmethod
-    def show_bg(surface):
-        surface.blit(BACKGROUND_IMAGE.convert_alpha(), (0, 0))
+        self.game_over_rect = GAME_OVER_IMAGE.get_rect()
+        self.score_board_rect = SCORE_BOARD_IMAGE.get_rect()
+        self.start_again_rect = START_BUTTON_IMAGE.get_rect()
 
-    def base(self, surface):
+    def render_bg(self, surface):
+        # surface.blit(BACKGROUND_IMAGE.convert_alpha(), (0, 0))
+        background_rect = BACKGROUND_IMAGE.get_rect()
+        tiles = ceil(SCREEN_WIDTH / BACKGROUND_IMAGE.get_width()) + 1
+        for i in range(0, tiles):
+            background_rect.topleft = (i * BACKGROUND_IMAGE.get_width() + self.background_scroll, 0)
+            surface.blit(BACKGROUND_IMAGE.convert_alpha(), background_rect)
+
+        self.background_scroll -= 2
+        if abs(self.background_scroll) > BACKGROUND_IMAGE.get_width():
+            self.background_scroll = 0
+
+    def render_base(self, surface):
         base_rect = BASE_IMAGE.get_rect()
         tiles = ceil(SCREEN_WIDTH / BASE_IMAGE.get_width()) + 1
         for i in range(0, tiles):
@@ -28,6 +44,36 @@ class Game(object):
         self.base_vel -= SCROLL_SPEED
         if abs(self.base_vel) > BASE_IMAGE.get_width():
             self.base_vel = 0
+
+    def render_score(self, surface, score):
+        digits = [int(digit) for digit in str(score)]
+        digit_width = sum(self.number_images[digit].get_width() for digit in digits)
+        offset_x = (SCREEN_WIDTH - digit_width) / 2
+        score_y = SCREEN_HEIGHT * 0.12
+
+        for digit in digits:
+            digit_image = self.number_images[digit]
+            surface.blit(digit_image, (offset_x, score_y))
+            offset_x += digit_image.get_width()
+
+    @staticmethod
+    def show_initial_screen(surface):
+        flappy_bird_rect = FLAPPY_BIRD_IMAGE.get_rect()
+        tap_img_rect = START_GAME_IMAGE.get_rect()
+        flappy_bird_rect.center = [SCREEN_WIDTH/2, SCREEN_HEIGHT*0.2]
+        tap_img_rect.center = [SCREEN_WIDTH/2, SCREEN_HEIGHT*0.6]
+
+        surface.blit(FLAPPY_BIRD_IMAGE, flappy_bird_rect)
+        surface.blit(START_GAME_IMAGE, tap_img_rect)
+
+    def show_game_over_screen(self, surface):
+        self.game_over_rect.center = [SCREEN_WIDTH/2, SCREEN_HEIGHT*0.2]
+        self.score_board_rect.center = [SCREEN_WIDTH/2, SCREEN_HEIGHT*0.5]
+        self.start_again_rect.center = [SCREEN_WIDTH/2, SCREEN_HEIGHT*0.8]
+
+        surface.blit(GAME_OVER_IMAGE, self.game_over_rect)
+        surface.blit(SCORE_BOARD_IMAGE, self.score_board_rect)
+        surface.blit(START_BUTTON_IMAGE, self.start_again_rect)
 
 
 class Bird(pygame.sprite.Sprite):
@@ -43,6 +89,7 @@ class Bird(pygame.sprite.Sprite):
         self.bird = sprite_sheet.SpriteSheet(IMAGE_PATH + "bird_sprite-sheet.png")
         self.action = RANDOM_ACTION
         self.any_collision_occurred = False  # Add a hit occurred flag
+        self.hit_time = 0
         step_counter = 0
         animation_steps = [3, 3, 3]
 
@@ -67,12 +114,13 @@ class Bird(pygame.sprite.Sprite):
             self.flying = False
             if not self.any_collision_occurred:
                 HIT_SOUND.play()  # Play the hit sound
+                self.hit_time = pygame.time.get_ticks()  # Set the hit time
                 self.any_collision_occurred = True  # Set the hit occurred flag
 
     def update(self):
         # gravity acting on bird
         if self.flying:
-            self.vel += 0.6
+            self.vel += 0.7
             if self.vel > 8:
                 self.vel = 8
 
@@ -88,7 +136,7 @@ class Bird(pygame.sprite.Sprite):
             # Bird flap(jump)
             if pygame.mouse.get_pressed()[0] == 1 and not self.flap:
                 self.flap = True
-                self.vel = -8
+                self.vel = -10
                 self.angle = -45
                 FLAP_SOUND.play()
 
