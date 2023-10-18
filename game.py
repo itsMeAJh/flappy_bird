@@ -1,179 +1,175 @@
 from math import ceil
 from const import *
-import sprite_sheet
+from random import randint
 import pygame
+import os
 
 
-class Game(object):
+class GameObject(object):
     def __init__(self):
+        self.init_game_object()
+        self.init_game_images()
+        self.init_game_sounds()
+
+    def init_game_object(self):
+        self.game_over = False
+        self.score = 0
+        self.best_score = 0
         self.base_vel = 0
         self.background_scroll = 0
-        self.game_over = False
+        self.pipe_frequency = 1500  # milliseconds
+        self.last_pipe = pygame.time.get_ticks()
+        self.is_pipe_pass = False
+        self.initial_screen = True
 
-        self.number_images = []
-        self.score_numbers_images = []
-        for i in range(10):
-            img = pygame.image.load(IMAGE_PATH + f"{i}.png")
-            img1 = pygame.image.load(IMAGE_PATH + f"{i}s.png")
-            self.number_images.append(img)
-            self.score_numbers_images.append(img1)
+    def init_game_images(self):
+        self.images = {}
+        images_name = os.listdir(IMAGE_PATH)
+        for image in images_name:
+            img = image.replace(".png", "")
+            self.images[img] = ImageLoader.load_image(image)
+        self.background_image = ImageLoader.load_random_background()
+        self.pipe_image = ImageLoader.load_random_pipe()
 
-        self.game_over_rect = GAME_OVER_IMAGE.get_rect()
-        self.score_board_rect = SCORE_BOARD_IMAGE.get_rect()
-        self.start_again_rect = START_BUTTON_IMAGE.get_rect()
+    def init_game_sounds(self):
+        self.sounds = {}
+        sounds_name = os.listdir(SOUND_PATH)
+        for sound in sounds_name:
+            audio = sound.replace(".mp3", "")
+            self.sounds[audio] = SoundLoader.load_sound(sound)
 
-    def render_bg(self, surface):
+
+class Game(GameObject):
+    def __init__(self):
+        GameObject.__init__(self)
+
+        self.game_over_rect = self.images['game_over_text'].get_rect()
+        self.score_board_rect = self.images['score_board'].get_rect()
+        self.start_again_rect = self.images['start_button'].get_rect()
+
+    def render_bg(self, surface: pygame.surface.Surface, game_over: bool):
         # surface.blit(BACKGROUND_IMAGE.convert_alpha(), (0, 0))
-        background_rect = BACKGROUND_IMAGE.get_rect()
-        tiles = ceil(SCREEN_WIDTH / BACKGROUND_IMAGE.get_width()) + 1
+        background_rect = self.background_image.get_rect()
+        tiles = ceil(SCREEN_WIDTH / self.background_image.get_width()) + 1
         for i in range(0, tiles):
-            background_rect.topleft = (i * BACKGROUND_IMAGE.get_width() + self.background_scroll, 0)
-            surface.blit(BACKGROUND_IMAGE.convert_alpha(), background_rect)
+            background_rect.topleft = (i * self.background_image.get_width() + self.background_scroll, 0)
+            surface.blit(self.background_image.convert_alpha(), background_rect)
 
-        self.background_scroll -= 2
-        if abs(self.background_scroll) > BACKGROUND_IMAGE.get_width():
-            self.background_scroll = 0
+        if not game_over:
+            self.background_scroll -= SCROLL_SPEED - 3
+            if abs(self.background_scroll) > self.background_image.get_width():
+                self.background_scroll = 0
 
-    def render_base(self, surface):
-        base_rect = BASE_IMAGE.get_rect()
-        tiles = ceil(SCREEN_WIDTH / BASE_IMAGE.get_width()) + 1
+    def render_base(self, surface: pygame.surface.Surface, game_over: bool):
+        base_rect = self.images['base'].get_rect()
+        tiles = ceil(SCREEN_WIDTH / self.images['base'].get_width()) + 1
         for i in range(0, tiles):
-            base_rect.bottomleft = (i * BASE_IMAGE.get_width() + self.base_vel, SCREEN_HEIGHT)
-            surface.blit(BASE_IMAGE.convert_alpha(), base_rect)
+            base_rect.bottomleft = (i * self.images['base'].get_width() + self.base_vel, SCREEN_HEIGHT)
+            surface.blit(self.images['base'].convert_alpha(), base_rect)
 
-        self.base_vel -= SCROLL_SPEED
-        if abs(self.base_vel) > BASE_IMAGE.get_width():
-            self.base_vel = 0
+        if not game_over:
+            self.base_vel -= SCROLL_SPEED
+            if abs(self.base_vel) > self.images['base'].get_width():
+                self.base_vel = 0
 
-    def render_score(self, surface, score):
-        digits = [int(digit) for digit in str(score)]
-        digit_width = sum(self.number_images[digit].get_width() for digit in digits)
+    def render_score(self, surface: pygame.surface):
+        digits = [int(digit) for digit in str(self.score)]
+        digit_width = sum(self.images[str(digit)].get_width() for digit in digits)
         offset_x = (SCREEN_WIDTH - digit_width) / 2
         score_y = SCREEN_HEIGHT * 0.12
 
         for digit in digits:
-            digit_image = self.number_images[digit]
+            digit_image = self.images[str(digit)]
             surface.blit(digit_image, (offset_x, score_y))
             offset_x += digit_image.get_width()
 
+    def read_score(self):
+        try:
+            with open("best_score.txt", "r") as f:
+                self.best_score = int(f.read())
+        except Exception as e:
+            print("There is no best_score.txt file")
+            return e
+
+    def write_score(self):
+        if self.score > self.best_score:
+            self.best_score = self.score
+        with open("best_score.txt", "w") as f:
+            f.write(str(self.best_score))
+
+    def show_my_score(self, surface: pygame.surface.Surface):
+        digits = [int(digit) for digit in str(self.score)]
+        digit_width = sum(self.images[str(digit)+'s'].get_width() for digit in digits)
+        offset_x = (SCREEN_WIDTH - digit_width) * 0.80
+        score_y = SCREEN_HEIGHT * 0.450
+        for digit in digits:
+            digit_image = self.images[str(digit) + 's']
+            surface.blit(digit_image, (offset_x, score_y))
+            offset_x += digit_image.get_width()
+
+    def show_my_best_score(self, surface: pygame.surface.Surface):
+        digits = [int(digit) for digit in str(self.best_score)]
+        digit_width = sum(self.images[str(digit)+'s'].get_width() for digit in digits)
+        offset_x = (SCREEN_WIDTH - digit_width) * 0.80
+        score_y = SCREEN_HEIGHT * 0.53
+
+        for digit in digits:
+            digit_image = self.images[str(digit) + 's']
+            surface.blit(digit_image, (offset_x, score_y))
+            offset_x += digit_image.get_width()
+
+    def show_initial_screen(self, surface: pygame.surface.Surface):
+        flappy_bird_rect = self.images['flappy_bird_text'].get_rect()
+        get_ready_rect = self.images['get_ready_text'].get_rect()
+        tap_img_rect = self.images['start_game'].get_rect()
+        flappy_bird_rect.center = [SCREEN_WIDTH / 2, SCREEN_HEIGHT * 0.2]
+        get_ready_rect.center = [SCREEN_WIDTH/2, SCREEN_HEIGHT * 0.32]
+        tap_img_rect.center = [SCREEN_WIDTH / 2, SCREEN_HEIGHT * 0.6]
+
+        surface.blit(self.images['flappy_bird_text'], flappy_bird_rect)
+        surface.blit(self.images['get_ready_text'], get_ready_rect)
+        surface.blit(self.images['start_game'], tap_img_rect)
+
+    def show_game_over_screen(self, surface: pygame.surface.Surface):
+        self.game_over_rect.center = [SCREEN_WIDTH / 2, SCREEN_HEIGHT * 0.2]
+        self.score_board_rect.center = [SCREEN_WIDTH / 2, SCREEN_HEIGHT * 0.5]
+        self.start_again_rect.center = [SCREEN_WIDTH / 2, SCREEN_HEIGHT * 0.8]
+
+        surface.blit(self.images['game_over_text'], self.game_over_rect)
+        surface.blit(self.images['score_board'], self.score_board_rect)
+        surface.blit(self.images['start_button'], self.start_again_rect)
+
+    def reset(self):
+        self.score = 0
+        self.base_vel = 0
+        self.background_scroll = 0
+        self.game_over = False
+        self.initial_screen = True
+        self.is_pipe_pass = False
+
+    def restart_button_clicked(self, event):
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            if self.start_again_rect.left < event.pos[0] < self.start_again_rect.right \
+                    and self.start_again_rect.top < event.pos[1] < self.start_again_rect.bottom:
+                return True
+
+
+class ImageLoader:
     @staticmethod
-    def show_initial_screen(surface):
-        flappy_bird_rect = FLAPPY_BIRD_IMAGE.get_rect()
-        tap_img_rect = START_GAME_IMAGE.get_rect()
-        flappy_bird_rect.center = [SCREEN_WIDTH/2, SCREEN_HEIGHT*0.2]
-        tap_img_rect.center = [SCREEN_WIDTH/2, SCREEN_HEIGHT*0.6]
+    def load_image(image_name: str):
+        return pygame.image.load(IMAGE_PATH + image_name).convert_alpha()
 
-        surface.blit(FLAPPY_BIRD_IMAGE, flappy_bird_rect)
-        surface.blit(START_GAME_IMAGE, tap_img_rect)
+    @staticmethod
+    def load_random_background():
+        return pygame.image.load(IMAGE_PATH + f"background-{randint(1, 2)}.png")
 
-    def show_game_over_screen(self, surface):
-        self.game_over_rect.center = [SCREEN_WIDTH/2, SCREEN_HEIGHT*0.2]
-        self.score_board_rect.center = [SCREEN_WIDTH/2, SCREEN_HEIGHT*0.5]
-        self.start_again_rect.center = [SCREEN_WIDTH/2, SCREEN_HEIGHT*0.8]
-
-        surface.blit(GAME_OVER_IMAGE, self.game_over_rect)
-        surface.blit(SCORE_BOARD_IMAGE, self.score_board_rect)
-        surface.blit(START_BUTTON_IMAGE, self.start_again_rect)
+    @staticmethod
+    def load_random_pipe():
+        return pygame.image.load(IMAGE_PATH + f"pipe-{randint(1, 2)}.png")
 
 
-class Bird(pygame.sprite.Sprite):
-    def __init__(self, x, y):
-        pygame.sprite.Sprite.__init__(self)
-        self.images = []
-        self.index = 0
-        self.counter = 0
-        self.vel = 0
-        self.angle = 0
-        self.flap = False
-        self.flying = False
-        self.bird = sprite_sheet.SpriteSheet(IMAGE_PATH + "bird_sprite-sheet.png")
-        self.action = RANDOM_ACTION
-        self.any_collision_occurred = False  # Add a hit occurred flag
-        self.hit_time = 0
-        step_counter = 0
-        animation_steps = [3, 3, 3]
+class SoundLoader:
+    @staticmethod
+    def load_sound(sound_name: str):
+        return pygame.mixer.Sound(SOUND_PATH + sound_name)
 
-        for step in animation_steps:
-            temp_list = []
-            for _ in range(step):
-                # img = pygame.image.load(IMAGE_PATH + f"red_bird-{num}.png")
-                # self.images.append(img)
-                temp_list.append(self.bird.image_at((BIRD_WIDTH * step_counter, 0, BIRD_WIDTH, BIRD_HEIGHT), -1))
-                step_counter += 1
-            self.images.append(temp_list)
-
-        self.image = self.images[self.action][self.index]
-        self.rect = self.image.get_rect()
-        self.rect.center = [x, y]
-        self.game = Game()
-
-    def hit(self):
-        """Checks whether the bottom part of the bird hits the ground"""
-        if self.rect.bottom > HEIGHT_TO_BOTTOM:
-            self.game.game_over = True
-            self.flying = False
-            if not self.any_collision_occurred:
-                HIT_SOUND.play()  # Play the hit sound
-                self.hit_time = pygame.time.get_ticks()  # Set the hit time
-                self.any_collision_occurred = True  # Set the hit occurred flag
-
-    def update(self):
-        # gravity acting on bird
-        if self.flying:
-            self.vel += 0.7
-            if self.vel > 8:
-                self.vel = 8
-
-            if self.rect.bottom < HEIGHT_TO_BOTTOM:
-                self.rect.y += int(self.vel)
-
-            # rotate the bird
-            self.angle += 3
-            if self.angle > 90:
-                self.angle = 90
-
-        if not self.game.game_over:
-            # Bird flap(jump)
-            if pygame.mouse.get_pressed()[0] == 1 and not self.flap:
-                self.flap = True
-                self.vel = -10
-                self.angle = -45
-                FLAP_SOUND.play()
-
-            if pygame.mouse.get_pressed()[0] == 0:
-                self.flap = False
-
-            # Handle Animation
-            flap_cooldown = 5
-            self.counter += 1
-
-            if self.counter > flap_cooldown:
-                self.counter = 0
-                self.index += 1
-                if self.index >= len(self.images):
-                    self.index = 0
-
-            self.image = pygame.transform.rotate(self.images[self.action][self.index], -self.angle)
-
-
-class Pipe(pygame.sprite.Sprite):
-    def __init__(self, x, y, position):
-        pygame.sprite.Sprite.__init__(self)
-        self.image = PIPE_IMAGE
-        self.rect = self.image.get_rect()
-        self.no_sound = True
-
-        if position is 1:  # for upper pipe
-            self.image = pygame.transform.flip(self.image, False, True)
-            self.rect.bottomleft = [x, y - int(HALF_PIPE_GAP)]
-            self.no_sound = False
-
-        if position is -1:  # for lower pipe
-            self.rect.topleft = [x, y + int(HALF_PIPE_GAP)]
-
-    def update(self, flying, game_over):
-        if flying and not game_over:
-            self.rect.x -= SCROLL_SPEED
-
-            if self.rect.right < 0:
-                self.kill()
