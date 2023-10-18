@@ -10,6 +10,7 @@ from game import Game
 from bird import Bird
 from pipe import Pipe
 
+
 class Main:
     def __init__(self):
         pygame.init()
@@ -19,7 +20,7 @@ class Main:
     def init_game_window(self):
         my_appid = 'mycompany.myproduct.subproduct.version'  # arbitrary string
         ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(my_appid)
-        self.screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+        self.screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.NOFRAME)
         self.game = Game()
         pygame.display.set_caption(WINDOW_TITLE)
         pygame.display.set_icon(self.game.images['flappy_bird_icon'])
@@ -52,16 +53,6 @@ class Main:
                 self.flappy.events(event)
 
             self.button_clicked = self.game.restart_button_clicked(event)
-
-    def check_collision(self):
-        # Check for collisions between bird, pipes and ground or top
-        if pygame.sprite.groupcollide(self.bird_group, self.pipe_group, False, False) or self.flappy.rect.top < 0:
-            self.flappy.game_over = True
-            if not self.flappy.any_collision_occurred:
-                self.game.sounds['hit'].play()  # Play the hit sound
-                self.flappy.any_collision_occurred = True  # Set the collision occurred flag
-
-        self.flappy.hit()  # Checks the bird to the ground
 
     def render_pipes(self):
         if not self.flappy.game_over and self.flappy.flying:
@@ -97,7 +88,8 @@ class Main:
     def _update_game(self):
         """ Update whole game """
 
-        self.check_collision()
+        # Checks Any collisions to bird
+        self.flappy.hit(self.bird_group, self.pipe_group)
 
         # Update score
         self.update_score()
@@ -110,28 +102,23 @@ class Main:
 
     def render_game(self):
         # All set to their priority to image overlap each other
-
         self.screen.fill(BLACK_COLOR)  # Clear the screen with a black background
 
         # Draw game elements (background, pipes, bird, etc.)
-
         self.game.render_bg(self.screen, self.flappy.game_over)  # Render the background
-
         self.pipe_group.draw(self.screen)  # Draw pipes
-
         self.render_pipes()  # Render the pipes
-
         self.game.render_base(self.screen, self.flappy.game_over)  # Render the pipes
-
         self.bird_group.draw(self.screen)  # Draw bird
 
         if self.flappy.game_over:
             self.game.show_game_over_screen(self.screen)  # Draw game over text, score board and replay button
             self.game.show_my_score(self.screen)
-            self.game.show_my_best_score(self.screen)
+            self.game.show_best_score(self.screen)
         elif not self.flappy.flying:
             if self.game.initial_screen:
-                self.game.show_initial_screen(self.screen)
+                self.game.show_initial_screen(self.screen)  # Draw title, text
+                self.flappy.initial_animation()  # Bird Animation
         else:
             self.game.initial_screen = False
             self.game.render_score(self.screen)  # Render the score

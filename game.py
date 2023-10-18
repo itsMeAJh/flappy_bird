@@ -107,7 +107,7 @@ class Game(GameObject):
             surface.blit(digit_image, (offset_x, score_y))
             offset_x += digit_image.get_width()
 
-    def show_my_best_score(self, surface: pygame.surface.Surface):
+    def show_best_score(self, surface: pygame.surface.Surface):
         digits = [int(digit) for digit in str(self.best_score)]
         digit_width = sum(self.images[str(digit)+'s'].get_width() for digit in digits)
         offset_x = (SCREEN_WIDTH - digit_width) * 0.80
@@ -141,11 +141,11 @@ class Game(GameObject):
 
     def reset(self):
         self.score = 0
-        self.base_vel = 0
-        self.background_scroll = 0
         self.game_over = False
         self.initial_screen = True
         self.is_pipe_pass = False
+        self.background_image = ImageLoader.load_random_background()
+        self.pipe_image = ImageLoader.load_random_pipe()
 
     def restart_button_clicked(self, event):
         if event.type == pygame.MOUSEBUTTONDOWN:

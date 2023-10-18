@@ -1,7 +1,9 @@
-from game import GameObject
-from const import *
-import sprite_sheet
+from random import randrange
 import pygame
+import sprite_sheet
+from const import *
+from game import GameObject
+
 
 class Bird(pygame.sprite.Sprite, GameObject):
     def __init__(self, x: int, y: int):
@@ -15,7 +17,7 @@ class Bird(pygame.sprite.Sprite, GameObject):
         self.flap = False
         self.flying = False
         self.bird = sprite_sheet.SpriteSheet(IMAGE_PATH + "bird_sprite-sheet.png")
-        self.action = RANDOM_ACTION
+        self.action = randrange(0, 2)
         self.any_collision_occurred = False  # Add a hit occurred flag
         self.hit_time = 0
         step_counter = 0
@@ -32,17 +34,21 @@ class Bird(pygame.sprite.Sprite, GameObject):
         self.rect = self.image.get_rect()
         self.rect.center = [x, y]
 
-    def hit(self):
+    def hit(self, bird, pipe):
         """Checks whether the bottom part of the bird hits the ground"""
-        if self.rect.bottom > (SCREEN_HEIGHT - self.images['base'].get_height()):
+        if (
+            pygame.sprite.groupcollide(bird, pipe, False, False)
+            or self.rect.bottom > (SCREEN_HEIGHT - self.images['base'].get_height())
+            or self.rect.top < -50
+        ):
             self.game_over = True
             self.flying = False
             if not self.any_collision_occurred:
                 self.sounds['hit'].play()  # Play the hit sound
-                self.hit_time = pygame.time.get_ticks()  # Set the hit time
-                self.any_collision_occurred = True  # Set the hit occurred flag
+                self.any_collision_occurred = True  # Set the collision occurred flag
 
     def update(self):
+
         # gravity acting on bird
         if self.flying:
             self.vel += 0.7
@@ -104,6 +110,15 @@ class Bird(pygame.sprite.Sprite, GameObject):
         self.any_collision_occurred = False
         self.vel = 0
         self.angle = 0
-        self.action = RANDOM_ACTION
+        self.action = randrange(0, 2)
         self.rect.center = [INITIAL_BIRD_POS_X, INITIAL_BIRD_POS_Y]
         self.image = self.images_[self.action][self.index]
+
+    def initial_animation(self):
+        if self.rect.y < SCREEN_HEIGHT//1.9:
+            self.vel += 0.4
+        elif self.rect.y > SCREEN_HEIGHT//2:
+            self.vel -= 0.4
+        if self.vel > 5:
+            self.vel = -5
+        self.rect.centery += int(self.vel)
